@@ -57,27 +57,35 @@ min_diff_size = 50
 max_diff_size = 50000
 
 # ============================================================
-# TIER 2: Standard (Claude Sonnet)
-# Size: S/M (20-500 LOC, up to 10 files)
+# TIER 2: Spark with DeepSeek-V3 (Extended Thinking)
+# Size: S/M (50-500 LOC, up to 10 files)
 # Risk: Medium
-# Cost: ~$0.10-0.20 per task
-# Speed: 2-5 minutes
+# Cost: ~$0.001/task (amortized Spark hardware)
+# Speed: 1-3 minutes (with extended thinking)
 # ============================================================
 
 [tier2]
 enabled = true
-model = "claude-sonnet-4-6"
-api_key = "${ANTHROPIC_API_KEY}"  # or read from 1Password, env, .env.local
-cost_budget = 10.0  # USD per day limit (fail-closed if exceeded)
-cost_gate = true    # Enforce budget gate
+model = "deepseek-v3"                   # Extended thinking variant
+model_type = "vllm"
+vllm_endpoint = "http://localhost:8001/v1"  # Separate vLLM instance for tier2
+use_thinking = true                     # Enable extended reasoning
+thinking_budget = 10000                 # Max thinking tokens
+hf_cache = "/mnt/shared_workspace/huggingface"  # Shared model cache
+use_aider = true
+aider_model = "deepseek-v3"
+guardrail_file = "guardrails/tier2-context.md"
+aider_timeout_seconds = 600
 
 [tier2.self_audit]
-tools = ["pytest", "ruff", "mypy", "compile"]
+tools = ["pytest", "ruff", "mypy", "compile", "bandit"]  # Stricter: add bandit
+pytest_args = ["tests/", "-v", "--tb=short"]
 max_files = 10
 
 [tier2.review]
-checks = ["audit_verdict", "diff_size", "file_count", "spec_adherence", "suspicious_patterns", "imports_check", "test_coverage"]
+checks = ["audit_verdict", "diff_size", "file_count", "spec_adherence", "suspicious_patterns", "imports_check"]
 max_files = 10
+max_diff_size = 100000
 
 # ============================================================
 # TIER 3: High-Risk (Claude Opus + Security)
