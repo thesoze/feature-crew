@@ -1,0 +1,156 @@
+# Feature Crew Configuration Template
+# Copy to config.toml and customize for your project
+
+[project]
+name = "myproject"
+repo_path = "/path/to/myproject"
+description = "My awesome Python project"
+version = "0.1.0"
+
+[infrastructure]
+redis_url = "redis://localhost:6379"
+spark_url = "http://localhost:30001"
+log_level = "INFO"
+log_file = "logs/feature-crew.log"
+
+# ============================================================
+# TIER 1: Autonomous (Local LLM)
+# Size: XS (<20 LOC, 1 file)
+# Risk: Low
+# Cost: ~$0.0005 per task
+# Speed: 30-60 seconds
+# ============================================================
+
+[tier1]
+enabled = true
+model = "qwen3-235b"  # Options: qwen3-235b, llama3-70b, mistral-7b, etc.
+model_type = "vllm"   # Options: vllm, ollama, local, api
+
+# If using vLLM locally:
+vllm_endpoint = "http://localhost:8000/v1"
+
+# If using Ollama:
+# model = "qwen2.5:72b"
+# ollama_endpoint = "http://localhost:11434"
+
+# If using Claude API tier-1 (not recommended, use tier2 instead):
+# model = "claude-3-5-haiku"
+# api_key = "${ANTHROPIC_API_KEY}"
+
+# Aider integration
+use_aider = true
+aider_model = "qwen3"  # Aider's model identifier
+guardrail_file = "guardrails/tier1-f2.md"  # Optional: teach-to-ask guardrail
+aider_timeout_seconds = 300
+
+[tier1.self_audit]
+tools = ["pytest", "ruff", "mypy", "compile"]
+pytest_args = ["tests/", "-v", "--tb=short"]
+ruff_args = ["check", "src/", "--select=E9,F63,F7,F82"]
+mypy_args = ["src/", "--show-error-codes"]
+max_files = 3
+
+[tier1.review]
+checks = ["audit_verdict", "diff_size", "file_count", "spec_adherence", "suspicious_patterns"]
+max_files = 3
+min_diff_size = 50
+max_diff_size = 50000
+
+# ============================================================
+# TIER 2: Standard (Claude Sonnet)
+# Size: S/M (20-500 LOC, up to 10 files)
+# Risk: Medium
+# Cost: ~$0.10-0.20 per task
+# Speed: 2-5 minutes
+# ============================================================
+
+[tier2]
+enabled = true
+model = "claude-sonnet-4-6"
+api_key = "${ANTHROPIC_API_KEY}"  # or read from 1Password, env, .env.local
+cost_budget = 10.0  # USD per day limit (fail-closed if exceeded)
+cost_gate = true    # Enforce budget gate
+
+[tier2.self_audit]
+tools = ["pytest", "ruff", "mypy", "compile"]
+max_files = 10
+
+[tier2.review]
+checks = ["audit_verdict", "diff_size", "file_count", "spec_adherence", "suspicious_patterns", "imports_check", "test_coverage"]
+max_files = 10
+
+# ============================================================
+# TIER 3: High-Risk (Claude Opus + Security)
+# Size: L/XL (500+ LOC, complex logic, auth/payments/security)
+# Risk: High
+# Cost: ~$0.25-0.50 per task
+# Speed: 5-15 minutes
+# ============================================================
+
+[tier3]
+enabled = false  # Only enable for high-risk work
+model = "claude-opus-4-7"
+api_key = "${ANTHROPIC_API_KEY}"
+cost_budget = 50.0  # USD per day limit
+security_review = true
+full_test_suite = true
+code_review = true
+
+[tier3.self_audit]
+tools = ["pytest", "ruff", "mypy", "compile", "bandit", "semgrep"]
+max_files = 20
+
+[tier3.review]
+checks = ["audit_verdict", "diff_size", "file_count", "spec_adherence", "suspicious_patterns", "imports_check", "test_coverage", "security_patterns", "performance"]
+
+# ============================================================
+# Task Triage (Auto-Classification)
+# ============================================================
+
+[triage]
+# LOC thresholds
+xs_threshold = 20
+s_threshold = 100
+m_threshold = 500
+l_threshold = 2000
+
+# Risk scoring (0-100)
+high_risk_keywords = ["auth", "payment", "secret", "security", "crypto", "delete", "drop", "admin"]
+low_risk_keywords = ["docs", "log", "format", "typo", "rename", "comment"]
+
+# ============================================================
+# Guardrails (Optional)
+# ============================================================
+
+[guardrails]
+# F2 Guardrail for tier-1 LLM (teach to ask on ambiguity)
+tier1_enabled = true
+tier1_file = "guardrails/tier1-f2.md"
+
+# Custom instructions for tier-2/3
+tier2_instructions = "guardrails/tier2-instructions.md"
+tier3_instructions = "guardrails/tier3-instructions.md"
+
+# ============================================================
+# Observability & Monitoring
+# ============================================================
+
+[monitoring]
+prometheus_enabled = false
+prometheus_port = 8000
+
+slack_webhook = ""  # Optional: notify on task completion
+slack_failures_only = false
+
+grafana_dashboard = false
+grafana_url = ""
+
+# ============================================================
+# Development/Testing
+# ============================================================
+
+[development]
+dry_run = false          # If true, don't actually merge
+mock_lLM = false         # If true, use mock LLM responses for testing
+save_diffs = true        # Save all diffs to diffs/ for review
+verbose_logging = false

@@ -1,0 +1,155 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "feature-crew"
+version = "0.1.0"
+description = "Autonomous code generation, testing, and review pipeline for Python projects"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "you@example.com"}
+]
+keywords = ["llm", "autonomous", "code-generation", "ci-cd", "tier-1", "feature-crew"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "typer>=0.9.0",
+    "pydantic>=2.0",
+    "python-dotenv>=1.0.0",
+    "redis>=5.0.0",
+    "httpx>=0.24.0",
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "toml>=0.10.0",
+    "aiofiles>=23.0.0",
+    "rich>=13.0.0",  # for nice CLI output
+]
+
+[project.optional-dependencies]
+spark = [
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "redis>=5.0.0",
+    "pydantic>=2.0",
+]
+
+tier2 = [
+    "anthropic>=0.25.0",
+]
+
+tier3 = [
+    "anthropic>=0.25.0",
+]
+
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+]
+
+aider = [
+    "aider-chat>=0.30.0",
+]
+
+monitoring = [
+    "prometheus-client>=0.18.0",
+]
+
+docker = [
+    "docker>=6.1.0",
+]
+
+all = [
+    "feature-crew[spark,tier2,tier3,dev,aider,monitoring,docker]"
+]
+
+[project.urls]
+Homepage = "https://github.com/your-org/feature-crew"
+Documentation = "https://github.com/your-org/feature-crew/blob/main/docs"
+Repository = "https://github.com/your-org/feature-crew.git"
+Issues = "https://github.com/your-org/feature-crew/issues"
+
+[project.scripts]
+feature-crew = "feature_crew.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["feature_crew"]
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+include = '\.pyi?$'
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "W",    # pycodestyle warnings
+]
+ignore = [
+    "E501",  # line too long (black handles this)
+    "E203",  # whitespace before ':'
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+
+[[tool.mypy.overrides]]
+module = "aider.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "redis.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=feature_crew --cov-report=term-missing"
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["feature_crew"]
+omit = [
+    "feature_crew/__main__.py",
+    "feature_crew/cli.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if 0:",
+    "if False:",
+]

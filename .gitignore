@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Config
+config.toml
+.env
+.env.local
+*.key
+
+# Logs
+logs/
+*.log
+
+# Docker
+.dockerignore
+
+# Project-specific
+diffs/
+worktrees/
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db

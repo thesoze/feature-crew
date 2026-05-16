@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: feature-crew-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - feature-crew
+
+  spark:
+    build:
+      context: .
+      dockerfile: spark/Dockerfile
+    container_name: feature-crew-spark
+    ports:
+      - "30001:30001"
+    environment:
+      UPSTASH_REDIS_URL: redis://redis:6379
+      REPO_PATH: /app
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app:rw
+    networks:
+      - feature-crew
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:30001/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  orchestrator-tier1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: feature-crew-orchestrator-tier1
+    command: python -m feature_crew tier1 orchestrator --spark-url http://spark:30001
+    environment:
+      UPSTASH_REDIS_URL: redis://redis:6379
+      LOG_LEVEL: INFO
+    depends_on:
+      spark:
+        condition: service_healthy
+    volumes:
+      - .:/app:rw
+    networks:
+      - feature-crew
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+
+networks:
+  feature-crew:
+    driver: bridge
