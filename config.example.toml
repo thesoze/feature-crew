@@ -88,27 +88,57 @@ max_files = 10
 max_diff_size = 100000
 
 # ============================================================
-# TIER 3: High-Risk (Claude Opus + Security)
-# Size: L/XL (500+ LOC, complex logic, auth/payments/security)
-# Risk: High
-# Cost: ~$0.25-0.50 per task
-# Speed: 5-15 minutes
+# TIER 3a: Medium-Risk (DeepSeek-V3 via Spark)
+# Size: M/L (100-300 LOC, moderate logic)
+# Risk: Medium
+# Cost: ~$0.001 generation + $0.05 review = $0.05/task
+# Speed: 2-3 minutes
+# Examples: Schema fields, permission checks, logging, helper refactors
 # ============================================================
 
-[tier3]
-enabled = false  # Only enable for high-risk work
-model = "claude-opus-4-7"
+[tier3a]
+enabled = true
+model = "deepseek-v3"                   # Extended thinking variant
+model_type = "vllm"
+vllm_endpoint = "http://localhost:8001/v1"
+use_thinking = true
+thinking_budget = 10000
+hf_cache = "/mnt/shared_workspace/huggingface"
+use_aider = true
+guardrail_file = "guardrails/tier3a-context.md"
+aider_timeout_seconds = 600
+
+[tier3a.self_audit]
+tools = ["pytest", "ruff", "mypy", "compile", "bandit", "semgrep"]
+max_files = 15
+max_diff_size = 100000
+
+[tier3a.review]
+checks = ["audit_verdict", "diff_size", "file_count", "spec_adherence", "suspicious_patterns", "imports_check", "security_patterns"]
+
+# ============================================================
+# TIER 3b: High-Risk (Claude Opus Direct)
+# Size: L/XL (300+ LOC, complex logic, auth/payments/security)
+# Risk: High
+# Cost: ~$0.40 generation + $0.05 review = $0.45/task
+# Speed: 5-15 minutes
+# Examples: Auth, payments, secrets, crypto, external APIs, async transactions
+# ============================================================
+
+[tier3b]
+enabled = true
+model = "claude-opus-4-7"               # Opus direct (no Spark intermediary)
 api_key = "${ANTHROPIC_API_KEY}"
-cost_budget = 50.0  # USD per day limit
+cost_budget = 100.0                     # Higher budget for high-risk work
+cost_gate = true
 security_review = true
 full_test_suite = true
-code_review = true
 
-[tier3.self_audit]
+[tier3b.self_audit]
 tools = ["pytest", "ruff", "mypy", "compile", "bandit", "semgrep"]
 max_files = 20
 
-[tier3.review]
+[tier3b.review]
 checks = ["audit_verdict", "diff_size", "file_count", "spec_adherence", "suspicious_patterns", "imports_check", "test_coverage", "security_patterns", "performance"]
 
 # ============================================================
