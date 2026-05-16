@@ -80,10 +80,10 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-org/feature-crew"
-Documentation = "https://github.com/your-org/feature-crew/blob/main/docs"
-Repository = "https://github.com/your-org/feature-crew.git"
-Issues = "https://github.com/your-org/feature-crew/issues"
+Homepage = "https://github.com/thesoze/feature-crew"
+Documentation = "https://github.com/thesoze/feature-crew/blob/main/docs"
+Repository = "https://github.com/thesoze/feature-crew.git"
+Issues = "https://github.com/thesoze/feature-crew/issues"
 
 [project.scripts]
 feature-crew = "feature_crew.cli:app"

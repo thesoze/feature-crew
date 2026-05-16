@@ -10,7 +10,7 @@ A production-tested, reusable framework for autonomous code generation, testing,
 
 ```bash
 # 1. Clone this repo
-git clone https://github.com/your-org/feature-crew.git myproject-crew
+git clone https://github.com/thesoze/feature-crew.git myproject-crew
 cd myproject-crew
 
 # 2. Configure for your project
